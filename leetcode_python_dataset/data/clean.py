@@ -10,7 +10,7 @@ def is_row_valid(item: dict) -> bool:
         bool: Whether the given row is valid.
     """
 
-    required_items = ["slug", "difficulty", "problem", "solution", "source"]
+    required_items = ["slug", "difficulty", "content", "python"]
 
     for i in required_items:
         if not item[i]:
