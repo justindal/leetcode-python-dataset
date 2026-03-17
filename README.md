@@ -66,6 +66,22 @@ leetcode-dataset
 python3 main.py
 ```
 
+## Citation
+
+newfacade/LeetCodeDataset:
+
+```bibtex
+@misc{xia2025leetcodedatasettemporaldatasetrobust,
+	title={LeetCodeDataset: A Temporal Dataset for Robust Evaluation and Efficient Training of Code LLMs},
+	author={Yunhui Xia and Wei Shen and Yan Wang and Jason Klein Liu and Huifeng Sun and Siyue Wu and Jian Hu and Xiaolong Xu},
+	year={2025},
+	eprint={2504.14655},
+	archivePrefix={arXiv},
+	primaryClass={cs.LG},
+	url={https://arxiv.org/abs/2504.14655},
+}
+```
+
 ## License
 
-Apache 2.0 — the more restrictive of the two source licenses.
+Apache 2.0
