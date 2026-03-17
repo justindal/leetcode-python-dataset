@@ -1,10 +1,23 @@
 [project]
 name = "leetcode-python-dataset"
 version = "0.1.0"
-description = "Add your description here"
+description = "Dataset creation"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "datasets>=4.8.2",
     "torch>=2.10.0",
 ]
+
+[project.scripts]
+leetcode-dataset = "leetcode_python_dataset.cli:main"
+
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["leetcode_python_dataset*"]
+
+[tool.uv]
+package = true
