@@ -1,3 +1,29 @@
+---
+pretty_name: LeetCode Python Dataset
+license: apache-2.0
+language:
+  - en
+task_categories:
+  - text-generation
+task_ids:
+  - text2text-generation
+size_categories:
+  - 1K<n<10K
+tags:
+  - code
+  - python
+  - leetcode
+configs:
+  - config_name: default
+    data_files:
+      - split: train
+        path: train.jsonl
+      - split: validation
+        path: validation.jsonl
+      - split: test
+        path: test.jsonl
+---
+
 # leetcode-python-dataset
 
 Code for building and publishing the [`justindal/leetcode-python-dataset`](https://huggingface.co/datasets/justindal/leetcode-python-dataset) dataset on Hugging Face.
@@ -8,7 +34,8 @@ Merges two open-source LeetCode datasets into a unified schema with consistent f
 
 | Split | Rows | Source |
 |---|---|---|
-| train | 5000 | newfacade + greengerong |
+| train | 4488 | newfacade + greengerong |
+| validation | 499 | slug-group split from train |
 | test | 228 | newfacade only |
 
 
@@ -16,12 +43,13 @@ Merges two open-source LeetCode datasets into a unified schema with consistent f
 
 | Column | Type | Description |
 |---|---|---|
-| `task_id` | string | Problem slug e.g. `two-sum` |
+| `slug` | string | Problem slug e.g. `two-sum` |
 | `difficulty` | string | `Easy`, `Medium`, or `Hard` |
 | `tags` | list[string] | Topic tags e.g. `["Array", "Hash Table"]` |
 | `problem` | string | Full problem description |
 | `starter_code` | string | Function signature to complete |
 | `solution` | string | Accepted Python solution |
+| `tests` | list[dict] | Input/output test cases when available |
 | `source` | string | `newfacade` or `greengerong` |
 
 ## Sources
