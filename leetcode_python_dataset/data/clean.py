@@ -4,9 +4,7 @@ import re
 _FENCE_PYTHON = re.compile(r"```python\s*\n(.*?)```", re.DOTALL)
 _FENCE_GENERIC = re.compile(r"```\s*\n(.*?)```", re.DOTALL)
 _JS_INDICATORS = ("function ", "let ", "const ", "var ", "=> ", "===", "constructor(")
-_DEF_LINE_RE = re.compile(
-    r"^def\s+([A-Za-z_]\w*)\s*\((.*)\)(\s*(?:->\s*.+)?\s*:)$"
-)
+_DEF_LINE_RE = re.compile(r"^def\s+([A-Za-z_]\w*)\s*\((.*)\)(\s*(?:->\s*.+)?\s*:)$")
 
 
 def extract_python_code(solution: str) -> str | None:
@@ -79,7 +77,14 @@ def _signature_arg_exprs(def_line: str) -> list[str]:
     except SyntaxError:
         return []
 
-    method = tree.body[0].body[0]
+    if not tree.body or not isinstance(tree.body[0], ast.ClassDef):
+        return []
+
+    class_def = tree.body[0]
+    if not class_def.body or not isinstance(class_def.body[0], ast.FunctionDef):
+        return []
+
+    method = class_def.body[0]
     args: list[str] = []
     for arg in method.args.posonlyargs + method.args.args:
         if arg.arg != "self":
@@ -107,6 +112,12 @@ def _choose_target_function(
     return top_level_funcs[-1]
 
 
+def _has_solution_class(tree: ast.Module) -> bool:
+    return any(
+        isinstance(node, ast.ClassDef) and node.name == "Solution" for node in tree.body
+    )
+
+
 def _wrapper_insert_line(tree: ast.Module) -> int:
     insert_line = 0
     for node in tree.body:
@@ -124,16 +135,17 @@ def _wrapper_insert_line(tree: ast.Module) -> int:
     return insert_line
 
 
-def normalize_solution_style(solution: str, starter_code: str | None = None) -> str:
+def ensure_solution_class(solution: str, starter_code: str | None) -> str:
     code = solution.strip()
     if not code:
-        return code
-    if re.search(r"\bclass\s+Solution\b", code):
         return code
 
     try:
         tree = ast.parse(code)
     except SyntaxError:
+        return code
+
+    if _has_solution_class(tree):
         return code
 
     top_level_funcs = [node for node in tree.body if isinstance(node, ast.FunctionDef)]
@@ -147,14 +159,13 @@ def normalize_solution_style(solution: str, starter_code: str | None = None) -> 
         method_def = starter_def
         call_args = _signature_arg_exprs(method_def)
     else:
-        method_def = f"def {target.name}(self, *args, **kwargs):"
+        method_name = starter_name or target.name
+        method_def = f"def {method_name}(self, *args, **kwargs):"
         call_args = ["*args", "**kwargs"]
 
     call_expr = ", ".join(call_args)
     call_stmt = (
-        f"return {target.name}({call_expr})"
-        if call_expr
-        else f"return {target.name}()"
+        f"return {target.name}({call_expr})" if call_expr else f"return {target.name}()"
     )
     wrapper = [
         "class Solution:",
@@ -173,6 +184,30 @@ def normalize_solution_style(solution: str, starter_code: str | None = None) -> 
 
 def is_python(code: str) -> bool:
     return not any(ind in code for ind in _JS_INDICATORS)
+
+
+def solution_matches_starter(code: str, starter_code: str | None) -> bool:
+    if not starter_code:
+        return False
+
+    starter_name, _ = _extract_starter_method(starter_code)
+    if not starter_name:
+        return False
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return False
+
+    starter_norm = _normalize_name(starter_name)
+
+    for node in tree.body:
+        if isinstance(node, ast.ClassDef) and node.name == "Solution":
+            methods = [n.name for n in node.body if isinstance(n, ast.FunctionDef)]
+            return any(_normalize_name(m) == starter_norm for m in methods)
+
+    top_funcs = [n.name for n in tree.body if isinstance(n, ast.FunctionDef)]
+    return any(_normalize_name(f) == starter_norm for f in top_funcs)
 
 
 def is_row_valid(item: dict) -> bool:
