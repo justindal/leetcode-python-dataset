@@ -15,13 +15,18 @@ tags:
   - leetcode
 configs:
   - config_name: default
+    default: true
     data_files:
       - split: train
         path: train.jsonl
-      - split: validation
-        path: validation.jsonl
+      - split: valid
+        path: valid.jsonl
       - split: test
         path: test.jsonl
+  - config_name: benchmark
+    data_files:
+      - split: benchmark
+        path: benchmark.jsonl
 ---
 
 # leetcode-python-dataset
@@ -34,23 +39,38 @@ Merges two open-source LeetCode datasets into a unified schema with consistent f
 
 | Split | Rows | Source |
 |---|---|---|
-| train | 4488 | newfacade + greengerong |
-| validation | 499 | slug-group split from train |
+| train | 2856 | newfacade + greengerong |
+| valid | 310 | slug-group split from train |
 | test | 228 | newfacade only |
 
 
 ## Schema
 
+### `default` config (training)
+
+Each row is a single-turn chat conversation in the standard `messages` format:
+
 | Column | Type | Description |
 |---|---|---|
-| `slug` | string | Problem slug e.g. `two-sum` |
-| `difficulty` | string | `Easy`, `Medium`, or `Hard` |
-| `tags` | list[string] | Topic tags e.g. `["Array", "Hash Table"]` |
-| `problem` | string | Full problem description |
-| `starter_code` | string | Function signature to complete |
-| `solution` | string | Accepted Python solution |
-| `tests` | list[dict] | Input/output test cases when available |
-| `source` | string | `newfacade` or `greengerong` |
+| `messages` | list[dict] | Chat messages: system prompt, user problem, assistant solution |
+
+Each message dict has keys `role` (`"system"`, `"user"`, or `"assistant"`) and `content` (string).
+
+### `benchmark` config
+
+Rows keep the full structured problem fields and include a split label:
+
+| Column | Type | Description |
+|---|---|---|
+| `slug` | string | Problem slug / task id |
+| `difficulty` | string | Problem difficulty |
+| `tags` | list[string] | Topic tags |
+| `problem` | string | Problem statement |
+| `starter_code` | string | Prompt starter code |
+| `solution` | string | Reference Python solution |
+| `tests` | string or object | Source-provided tests metadata |
+| `source` | string | Upstream source dataset |
+| `type` | string | Original split: `train`, `valid`, or `test` |
 
 ## Sources
 
@@ -71,10 +91,14 @@ Run the build:
 
 ```bash
 uv run leetcode-dataset
-
-# or
-./.venv/bin/leetcode-dataset
 ```
+
+Optional flags:
+- `--verify` to filter the dataset against source tests
+- `--verify-test` to also verify the test split
+- `--publish --message "..."` for a non-interactive publish run
+
+Verification is optional and can change the final row counts.
 
 pip:
 
@@ -93,6 +117,8 @@ leetcode-dataset
 # or
 python3 main.py
 ```
+
+The same optional flags are available here as well.
 
 ## Citation
 
